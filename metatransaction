@@ -1,0 +1,68 @@
+import { ethers } from "ethers";
+
+async function main() {
+    // Ethereum RPC bağlantısı (Infura, Alchemy veya yerel node kullanılabilir)
+    const provider = new ethers.providers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/Lhnw5WCaKjKqX6SradvTTQKDQ4EEBGXE");
+
+    // Relayer veya admin cüzdanı için private key kullanılarak Wallet oluşturulur
+    const privateKey = "0xa3c259fade3b9fc8e522ccb902ada292f56a3b47f89f42df247aea4d99a20cb7"; // Cüzdanınızın private key'i
+    const wallet = new ethers.Wallet(privateKey, provider);
+
+    // Akıllı sözleşme adresi ve ABI tanımı
+    const contractAddress = "0xC3c7a654749FD237BB500ef7F98FAa9CdA6B73bc";
+    const abi = [
+        "function _executeMetaTransaction(address userAddress, address targetContract, address recipient, uint256 amount, uint256 nonce, bytes signature) public",
+        "function getFixedNumber() public view returns (uint256)"
+    ];
+
+    // Sözleşme örneği oluşturuluyor
+    const contract = new ethers.Contract(contractAddress, abi, wallet);
+
+    // Örnek parametreler
+    const userAddress = "0xUserAddressHere"; // Kullanıcı adresi
+    const targetContract = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"; // Hedef kontrat adresi
+    const recipient = "0xa431c3d7d6E334C53cEE76AA069F027F63FAddE8"; // Token alıcısının adresi
+    const amount = ethers.utils.parseEther("0.02"); // Gönderilecek miktar (1 token)
+    const nonce = 0; // Kullanıcının nonce değeri
+
+    // Imza oluşturma (kullanıcıdan alınan signature)
+    const functionSignature = ethers.utils.defaultAbiCoder.encode(
+        ["address", "uint256"],
+        [recipient, amount]
+    );
+    const messageHash = ethers.utils.solidityKeccak256(
+        ["address", "address", "bytes", "uint256"],
+        [userAddress, targetContract, functionSignature, nonce]
+    );
+    const ethSignedMessageHash = ethers.utils.hashMessage(ethers.utils.arrayify(messageHash));
+    const signature = await wallet.signMessage(ethers.utils.arrayify(ethSignedMessageHash)); // Bu kullanıcıdan alınmalıdır
+
+    // `_executeMetaTransaction` çağrısı
+    try {
+        const tx = await contract._executeMetaTransaction(
+            userAddress,
+            targetContract,
+            recipient,
+            amount,
+            nonce,
+            signature
+        );
+        console.log("Transaction sent:", tx.hash);
+
+        // İşlemin tamamlanmasını bekle
+        const receipt = await tx.wait();
+        console.log("Transaction confirmed:", receipt);
+    } catch (error) {
+        console.error("Error executing meta transaction:", error);
+    }
+
+    // `getFixedNumber` çağrısı
+    try {
+        const fixedNumber = await contract.getFixedNumber();
+        console.log("Fixed Number:", fixedNumber.toString());
+    } catch (error) {
+        console.error("Error calling getFixedNumber:", error);
+    }
+}
+
+main().catch(console.error);

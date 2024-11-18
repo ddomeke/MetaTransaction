@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES6", // ES6 veya daha modern bir hedef
+    "module": "CommonJS", // ESM modülü kullanıyorsanız "ESNext"
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true, // Derleme süresini hızlandırır
+    "outDir": "dist",
+    "resolveJsonModule": true // JSON dosyalarını içe aktarmak için
+  },
+  "include": ["./scripts", "./test", "./hardhat.config.ts", "./contracts"]
+}
