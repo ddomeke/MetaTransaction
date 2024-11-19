@@ -42,7 +42,7 @@ async function main() {
     console.log("nonce:", nonce);
 
     // Gönderilecek miktar (5 USDC = 5 * 10^6 micro USDC)
-    const amount = ethers.parseUnits("5", 6);
+    const amount = ethers.parseUnits("1", 6);
 
     // USDC için onay verin (approve)
     const approveTx = await usdcContract.approve(METATRANSACTION_CONTRACT, amount);
